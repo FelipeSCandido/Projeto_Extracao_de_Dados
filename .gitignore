@@ -1,0 +1,19 @@
+# --- Segurança e Chaves ---
+.env
+api.env
+
+# --- Dados (Não enviar para o GitHub) ---
+# Seguindo o requisito de manter os dados brutos de forma rastreável localmente
+data/raw/*
+data/processed/*
+data/final/*
+
+# Permitir apenas o ficheiro .gitkeep para manter a estrutura de pastas no Git
+!data/**/.gitkeep
+
+# --- Python e Sistema ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
