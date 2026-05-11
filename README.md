@@ -1,4 +1,4 @@
-#Projeto de Extração de Dados 2º ano - 2º semestre
+# Projeto de Extração de Dados 2º ano - 2º semestre
 
 ## 1. Visão Geral
 Este projeto foi desenvolvido para a unidade curricular de Extração de Dados. O objetivo é construir um pipeline de ETL (Extract, Transform, Load) completo, focado no domínio de entretenimento, especificamente na indústria de videojogos.
