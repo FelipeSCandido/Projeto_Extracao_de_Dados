@@ -2,6 +2,7 @@ import requests
 import json
 import csv
 import time
+import os
 from datetime import datetime
 
 BASE = "https://steamspy.com/api.php"
@@ -10,12 +11,7 @@ def get_top100(request_type):
     r = requests.get(BASE, params={"request": request_type})
     return r.json()
 
-def get_app_details(appid):
-    r = requests.get(BASE, params={"request": "appdetails", "appid": appid})
-    return r.json()
-
 def parse_owners(owners_str):
-    # Converte "1,000,000 .. 2,000,000" para o valor médio
     try:
         parts = owners_str.replace(",", "").split("..")
         low = int(parts[0].strip())
@@ -27,13 +23,16 @@ def parse_owners(owners_str):
 def minutos_para_horas(minutos):
     return round(minutos / 60, 1)
 
-# --- 1. Buscar Top 100 jogos (últimas 2 semanas) ---
+# --- 1. Preparar Diretório ---
+os.makedirs("data/raw", exist_ok=True) # Garante que a pasta existe
+
+# --- 2. Buscar Top 100 jogos ---
 print("A buscar Top 100 jogos...")
 jogos_raw = get_top100("top100in2weeks")
 
 dados = []
 for i, (appid, info) in enumerate(jogos_raw.items(), 1):
-    print(f"  [{i}/100] {info['name']}")
+    print(f"   [{i}/100] {info.get('name', 'Unknown')}")
 
     owners_low, owners_high, owners_medio = parse_owners(info.get("owners", "0 .. 0"))
     preco = int(info.get("price", 0) or 0)
@@ -64,24 +63,25 @@ for i, (appid, info) in enumerate(jogos_raw.items(), 1):
         "tags":                 ", ".join(info.get("tags", {}).keys()) if isinstance(info.get("tags"), dict) else ""
     }
     dados.append(jogo)
-    time.sleep(1)  # respeitar rate limit: 1 req/seg
+    # 1 segundo é seguro, mas para 100 jogos podes usar 0.2 se tiveres pressa
+    time.sleep(0.2) 
 
-# --- 2. Exportar JSON ---
+# --- 3. Exportar Ficheiros para data/raw ---
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-json_path = f"steamspy_top100_{timestamp}.json"
+json_path = os.path.join("data", "raw", f"steamspy_top100_{timestamp}.json")
+csv_path = os.path.join("data", "raw", f"steamspy_top100_{timestamp}.csv")
 
+# JSON
 output = {
-    "gerado_em":    datetime.now().isoformat(),
-    "fonte":        "SteamSpy API — top100in2weeks",
-    "total_jogos":  len(dados),
-    "jogos":        dados
+    "gerado_em":     datetime.now().isoformat(),
+    "fonte":         "SteamSpy API — top100in2weeks",
+    "total_jogos":   len(dados),
+    "jogos":         dados
 }
 with open(json_path, "w", encoding="utf-8") as f:
     json.dump(output, f, ensure_ascii=False, indent=2)
-print(f"\n✅ JSON exportado: {json_path}")
 
-# --- 3. Exportar CSV ---
-csv_path = f"steamspy_top100_{timestamp}.csv"
+# CSV
 campos = [
     "rank", "appid", "nome", "developer", "publisher", "genero",
     "owners_range", "owners_low", "owners_high", "owners_medio",
@@ -95,4 +95,7 @@ with open(csv_path, "w", newline="", encoding="utf-8") as f:
     writer.writeheader()
     for jogo in dados:
         writer.writerow({k: jogo[k] for k in campos})
-print(f"✅ CSV exportado:  {csv_path}")
+
+print(f"\n✅ Extração concluída!")
+print(f"JSON: {json_path}")
+print(f"CSV:  {csv_path}")

@@ -5,6 +5,7 @@ import csv
 from datetime import datetime
 from dotenv import load_dotenv
 
+# Carregar variáveis de ambiente [cite: 1]
 load_dotenv()
 
 CLIENT_ID = os.getenv("CLIENT_ID")
@@ -17,8 +18,11 @@ def get_token():
         "client_secret": CLIENT_SECRET,
         "grant_type": "client_credentials"
     })
+    r.raise_for_status()
     return r.json()["access_token"]
 
+# --- Configurações Iniciais ---
+os.makedirs("data/raw", exist_ok=True) # Garante a pasta de destino
 token = get_token()
 headers = {
     "Client-ID": CLIENT_ID,
@@ -82,8 +86,11 @@ for gid, s in stats.items():
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 dados = list(stats.values())
 
-# --- 4. Exportar JSON ---
-json_path = f"twitch_stats_{timestamp}.json"
+# --- 4. Caminhos de Exportação ---
+json_path = os.path.join("data", "raw", f"twitch_stats_{timestamp}.json")
+csv_path = os.path.join("data", "raw", f"twitch_stats_{timestamp}.csv")
+
+# --- 5. Exportar JSON ---
 output = {
     "gerado_em": datetime.now().isoformat(),
     "total_jogos": len(dados),
@@ -93,10 +100,8 @@ output = {
 }
 with open(json_path, "w", encoding="utf-8") as f:
     json.dump(output, f, ensure_ascii=False, indent=2)
-print(f"✅ JSON exportado: {json_path}")
 
-# --- 5. Exportar CSV ---
-csv_path = f"twitch_stats_{timestamp}.csv"
+# --- 6. Exportar CSV ---
 campos = ["rank", "game_id", "nome", "igdb_id", "streams_ao_vivo",
           "total_viewers", "viewer_medio", "viewer_max", "viewer_min",
           "top_streamer", "top_streamer_viewers", "linguas"]
@@ -106,6 +111,8 @@ with open(csv_path, "w", newline="", encoding="utf-8") as f:
     writer.writeheader()
     for s in dados:
         row = {k: s[k] for k in campos}
-        row["linguas"] = ", ".join(s["linguas"])  # lista → string no CSV
+        row["linguas"] = ", ".join(s["linguas"])
         writer.writerow(row)
-print(f"✅ CSV exportado:  {csv_path}")
+
+print(f"✅ Extração Twitch concluída com sucesso!")
+print(f"Arquivos salvos em data/raw: {os.path.basename(json_path)} e {os.path.basename(csv_path)}")
