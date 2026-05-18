@@ -78,10 +78,20 @@ def processar_steamspy():
     lista_jogos = dados_brutos.get("jogos", [])
     df = pd.DataFrame(lista_jogos)
     
+    # Filtragem: Mantemos apenas jogos que mostram atividade real (ccu_peak > 0)
     total_antes = len(df)
-    df = df[(df["avg_playtime_forever"] > 0) | (df["ccu_peak"] > 0)].copy()
+    df = df[df["ccu_peak"] > 0].copy()
     total_depois = len(df)
-    print(f"   Info: Filtrados {total_antes - total_depois} jogos inativos ou sem dados na Steam Spy.")
+    print(f"   Info: Filtrados {total_antes - total_depois} jogos inativos (ccu a zero) na Steam Spy.")
+    
+    # Remocao das colunas sem dados concretos solicitadas pelo utilizador
+    colunas_para_remover = [
+        "avg_playtime_forever", 
+        "avg_playtime_2weeks", 
+        "med_playtime_forever", 
+        "med_playtime_2weeks"
+    ]
+    df = df.drop(columns=[col for col in colunas_para_remover if col in df.columns], errors='ignore')
     
     df["nome_uniforme"] = df["nome"].astype(str).str.lower().str.strip()
     df_limpo = df.drop(columns=["nome"])
