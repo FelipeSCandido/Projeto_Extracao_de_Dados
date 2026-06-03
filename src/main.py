@@ -9,10 +9,19 @@ import threading
 import time
 from typing import Optional
 from pydantic import BaseModel
+from dotenv import load_dotenv
 
-# ─── Configuração ─────────────────────────────────────────────────────────────
+# ─── Configuração Dinâmica (.env + Fallback) ──────────────────────────────────
 
-DATABASE_URL = "postgresql://neondb_owner:npg_o1eRVk2MsJgH@ep-empty-heart-alqacqb3-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+# Força o Python a procurar o .env na raiz (uma pasta acima de 'src')
+dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+load_dotenv(dotenv_path)
+
+# Tenta ler do .env. Se não existir, usa a string direta como segurança.
+DATABASE_URL = os.getenv(
+    "NEON_DB_URL", 
+    "postgresql://neondb_owner:npg_o1eRVk2MsJgH@ep-empty-heart-alqacqb3-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+)
 
 # ─── Keep-alive ───────────────────────────────────────────────────────────────
 
@@ -105,14 +114,15 @@ class DimDeveloperCreate(BaseModel):
     developer_name: str
 
 # ═════════════════════════════════════════════════════════════════════════════
-# ESTADO
+# ROTAS DE INTERFACE / ESTADO
 # ═════════════════════════════════════════════════════════════════════════════
 
 @app.get("/frontend", include_in_schema=False)
 def serve_frontend():
-    html_path = os.path.join(os.path.dirname(__file__), "index.html")
+    # CORREÇÃO: Procura o index.html uma pasta acima da pasta 'src' (na raiz do projeto)
+    html_path = os.path.join(os.path.dirname(__file__), "..", "index.html")
     if not os.path.exists(html_path):
-        raise HTTPException(status_code=404, detail="index.html não encontrado")
+        raise HTTPException(status_code=404, detail="index.html não encontrado na raiz do projeto")
     return FileResponse(html_path, media_type="text/html")
 
 @app.get("/", tags=["Estado"])
