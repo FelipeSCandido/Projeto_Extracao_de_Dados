@@ -50,6 +50,12 @@ Os dados da Camada Silver foram estruturados num modelo dimensional (Star Schema
    ```powershell
    python src/load.py
    ```
+5. Inicie a API intermedia a partir da raiz do projeto para servir o Frontend:
+   ```powershell
+   python -m uvicorn src.main:app --reload
+   ```
+   No fim da execucao, abra o seguinte link no seu navegador para ver os graficos analiticos: http://127.0.0.1:8000/frontend
+
 ## 7. Estrutura Completa de Diretorios do Projeto
 ```text
 .
@@ -61,15 +67,16 @@ Os dados da Camada Silver foram estruturados num modelo dimensional (Star Schema
 │   ├── steam_spy_extract.py # Script de extracao da Steam Spy
 │   ├── Twitch_extract.py    # Script de extracao da Twitch
 │   ├── transform.py         # Script de higienizacao e cruzamento (Merge)
-│   └── load.py              # Script de carga dimensional para a Cloud
+│   ├── load.py              # Script de carga dimensional para a Cloud
+│   └── main.py              # FastAPI Backend (Servidor e rotas de dados)
 ├── .env                     # Chaves de API e credenciais da BD (Ignorado)
 ├── .gitignore               # Filtro de seguranca para chaves e dados pesados
+├── index.html               # Frontend Oficial (Graficos interativos Chart.js)
 └── README.md                # Documentacao oficial do projeto
 ```
 ## 8. Tecnologias e Dependencias
 - **Linguagem Base:** Python 3.10 ou superior.
 - **Base de Dados Cloud:** Neon Serverless PostgreSQL.
-- **Ferramenta de BI:** Power BI / Tableau.
 - **Bibliotecas Python Utilizadas:**
   - `pandas`: Processamento de matrizes e tratamento de dados.
   - `requests`: Consumo de endpoints das APIs REST.

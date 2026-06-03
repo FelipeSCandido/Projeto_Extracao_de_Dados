@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GAME DATA HUB</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#070b14; --bg2:#0d1424; --bg3:#111d35; --card:#0a1628;
+  --border:#1a2d52; --neon:#00f5ff; --neon2:#ff2d78; --neon3:#39ff14;
+  --gold:#ffd700; --text:#c8d8f0; --muted:#4a6080;
+  --font-head:'Orbitron',monospace; --font-mono:'Share Tech Mono',monospace; --font-body:'Exo 2',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,245,255,0.012) 2px,rgba(0,245,255,0.012) 4px);pointer-events:none;z-index:9999;}
+header{background:linear-gradient(135deg,#07101f,#0d1a33);border-bottom:1px solid var(--border);padding:0 2rem;position:sticky;top:0;z-index:100;box-shadow:0 4px 30px rgba(0,245,255,0.08);}
+.header-inner{display:flex;align-items:center;justify-content:space-between;max-width:1600px;margin:0 auto;height:64px;}
+.logo{font-family:var(--font-head);font-size:1.3rem;font-weight:900;color:var(--neon);text-shadow:0 0 20px rgba(0,245,255,0.6);letter-spacing:.15em;}
+.logo span{color:var(--neon2);}
+.status-dot{display:flex;align-items:center;gap:.5rem;font-family:var(--font-mono);font-size:.75rem;color:var(--neon3);}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--neon3);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 6px var(--neon3)}50%{opacity:.4;box-shadow:none}}
+nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2rem;}
+.nav-inner{display:flex;gap:0;max-width:1600px;margin:0 auto;overflow-x:auto;}
+.nav-btn{background:none;border:none;color:var(--muted);font-family:var(--font-head);font-size:.65rem;letter-spacing:.1em;padding:.85rem 1.4rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;text-transform:uppercase;white-space:nowrap;}
+.nav-btn:hover{color:var(--neon);}
+.nav-btn.active{color:var(--neon);border-bottom-color:var(--neon);text-shadow:0 0 12px rgba(0,245,255,0.5);}
+main{max-width:1600px;margin:0 auto;padding:2rem;}
+.section{display:none;}.section.active{display:block;}
+.section-title{font-family:var(--font-head);font-size:1rem;letter-spacing:.2em;color:var(--neon);text-transform:uppercase;margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem;}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--neon) 0%,transparent 100%);opacity:.3;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.5rem;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--neon),transparent);opacity:.4;}
+.controls-row{display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:1.5rem;}
+.field{display:flex;flex-direction:column;gap:.4rem;}
+.field label{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+.field select,.field input{background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--font-mono);font-size:.85rem;padding:.55rem .85rem;outline:none;transition:border-color .2s,box-shadow .2s;min-width:140px;}
+.field select:focus,.field input:focus{border-color:var(--neon);box-shadow:0 0 12px rgba(0,245,255,0.15);}
+.field select option{background:var(--bg2);}
+.btn{font-family:var(--font-head);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;padding:.6rem 1.4rem;border-radius:4px;border:none;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn-primary{background:var(--neon);color:var(--bg);box-shadow:0 0 16px rgba(0,245,255,0.3);}
+.btn-primary:hover{box-shadow:0 0 28px rgba(0,245,255,0.6);transform:translateY(-1px);}
+.btn-danger{background:var(--neon2);color:#fff;box-shadow:0 0 16px rgba(255,45,120,0.3);}
+.btn-danger:hover{box-shadow:0 0 28px rgba(255,45,120,0.6);transform:translateY(-1px);}
+.btn-success{background:var(--neon3);color:var(--bg);box-shadow:0 0 16px rgba(57,255,20,0.3);}
+.btn-success:hover{box-shadow:0 0 28px rgba(57,255,20,0.5);transform:translateY(-1px);}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--neon);color:var(--neon);}
+.btn-sm{padding:.4rem .9rem;font-size:.6rem;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:.78rem;}
+thead tr{border-bottom:1px solid var(--border);}
+th{padding:.7rem .8rem;text-align:left;color:var(--neon);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-head);font-weight:400;white-space:nowrap;}
+td{padding:.6rem .8rem;border-bottom:1px solid rgba(26,45,82,0.5);white-space:nowrap;}
+tr:hover td{background:rgba(0,245,255,0.03);}
+.rank-cell{color:var(--gold);font-weight:700;}
+.bar-wrap{display:flex;align-items:center;gap:.4rem;}
+.bar-out{width:60px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;}
+.bar-in{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--neon),var(--neon2));}
+.badge{display:inline-block;padding:.15rem .45rem;border-radius:3px;font-size:.68rem;}
+.bg{background:rgba(57,255,20,0.1);color:var(--neon3);border:1px solid rgba(57,255,20,0.3);}
+.br{background:rgba(255,45,120,0.1);color:var(--neon2);border:1px solid rgba(255,45,120,0.3);}
+.bb{background:rgba(0,245,255,0.1);color:var(--neon);border:1px solid rgba(0,245,255,0.3);}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:1rem;margin-bottom:1.5rem;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:1rem;text-align:center;}
+.stat-val{font-family:var(--font-head);font-size:1.3rem;color:var(--neon);}
+.stat-label{font-size:.68rem;color:var(--muted);margin-top:.3rem;text-transform:uppercase;letter-spacing:.08em;}
+.chart-container{position:relative;height:420px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+@media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+.crud-tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.crud-tab{background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-family:var(--font-head);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.5rem 1rem;border-radius:4px;cursor:pointer;transition:.2s;}
+.crud-tab.active{background:rgba(0,245,255,0.08);border-color:var(--neon);color:var(--neon);}
+.crud-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:1rem;}
+.crud-result{margin-top:1rem;padding:1rem;background:var(--bg3);border:1px solid var(--border);border-radius:4px;font-family:var(--font-mono);font-size:.78rem;max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-all;}
+.crud-result.ok{border-color:rgba(57,255,20,0.4);color:var(--neon3);}
+.crud-result.err{border-color:rgba(255,45,120,0.4);color:var(--neon2);}
+.sql-preview{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1rem;font-family:var(--font-mono);font-size:.78rem;color:var(--neon);min-height:50px;white-space:pre-wrap;word-break:break-all;}
+.loader{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--neon);border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row td{text-align:center;padding:2rem;color:var(--muted);}
+.empty{text-align:center;padding:3rem;color:var(--muted);font-family:var(--font-mono);}
+#toast{position:fixed;bottom:2rem;right:2rem;background:var(--card);border:1px solid var(--neon);border-radius:6px;padding:.8rem 1.2rem;font-family:var(--font-mono);font-size:.8rem;color:var(--neon);box-shadow:0 0 24px rgba(0,245,255,0.2);transform:translateY(100px);opacity:0;transition:all .3s;z-index:1000;}
+#toast.show{transform:translateY(0);opacity:1;}
+#toast.err{border-color:var(--neon2);color:var(--neon2);box-shadow:0 0 24px rgba(255,45,120,.2);}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--neon);}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="logo">GAME<span>DATA</span>HUB</div>
+    <div class="status-dot"><div class="dot" id="dot"></div><span id="api-status">A LIGAR...</span></div>
+  </div>
+</header>
+<nav>
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="showSection('top')" data-sec="top">🏆 TOP RANKINGS</button>
+    <button class="nav-btn" onclick="showSection('scatter')" data-sec="scatter">📊 DISPERSÃO</button>
+    <button class="nav-btn" onclick="showSection('crud')" data-sec="crud">⚙️ CRUD</button>
+    
+  </div>
+</nav>
+<main>
+
+<!-- TOP -->
+<section id="sec-top" class="section active">
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-val" id="s-total">—</div><div class="stat-label">Total Jogos</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-rating">—</div><div class="stat-label">Rating Médio</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-meta">—</div><div class="stat-label">Metacritic Médio</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-preco">—</div><div class="stat-label">Preço Médio</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-pub">—</div><div class="stat-label">Publishers</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-dev">—</div><div class="stat-label">Developers</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-owners">—</div><div class="stat-label">Max Owners</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-ccu">—</div><div class="stat-label">Max CCU Peak</div></div>
+  </div>
+  <div class="section-title">🏆 Top Rankings</div>
+  <div class="card">
+    <div class="controls-row">
+      <div class="field">
+        <label>Categoria</label>
+        <select id="top-category" onchange="loadTop()">
+          <option value="metacritic">🎯 Metacritic</option>
+          <option value="rating">⭐ Rating</option>
+          <option value="owners_medio">👥 Owners</option>
+          <option value="ccu_peak">🔥 CCU Peak</option>
+          <option value="total_viewers">📺 Total Viewers</option>
+          <option value="price">💰 Preço</option>
+          <option value="discount">🏷 Desconto</option>
+          <option value="rawg_estimated_playtime">⏱ Playtime</option>
+          <option value="viewer_max">👁 Viewer Max</option>
+          <option value="streams_ao_vivo">🎮 Streams ao Vivo</option>
+          <option value="top_streamer_viewers">🌟 Top Streamer Views</option>
+          <option value="appid">🆔 App ID</option>
+          <option value="rawg_id">🔢 RAWG ID</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Resultados</label>
+        <select id="top-limit" onchange="loadTop()">
+          <option value="10">Top 10</option>
+          <option value="25">Top 25</option>
+          <option value="50" selected>Top 50</option>
+          <option value="100">Top 100</option>
+          <option value="250">Top 250</option>
+          <option value="500">Top 500</option>
+          <option value="1000">Todos</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="loadTop()">▶ CARREGAR</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Jogo</th><th>Publisher</th><th>Developer</th>
+          <th>Rating</th><th>Metacritic</th><th>Preço</th><th>Desconto</th>
+          <th>Owners</th><th>CCU Peak</th><th>Viewers</th><th>Viewer Max</th>
+          <th>Streams</th><th>Top Streamer</th><th>Playtime</th><th>App ID</th>
+        </tr></thead>
+        <tbody id="top-tbody"><tr class="loading-row"><td colspan="16"><div class="loader"></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- SCATTER -->
+<section id="sec-scatter" class="section">
+  <div class="section-title">📊 Análise de Dispersão</div>
+  <div class="card" style="margin-bottom:1.5rem">
+    <div class="controls-row">
+      <div class="field">
+        <label>Eixo X</label>
+        <select id="axis-x">
+          <option value="metacritic">🎯 Metacritic</option>
+          <option value="rating">⭐ Rating</option>
+          <option value="owners_medio">👥 Owners</option>
+          <option value="ccu_peak">🔥 CCU Peak</option>
+          <option value="total_viewers">📺 Total Viewers</option>
+          <option value="price">💰 Preço</option>
+          <option value="discount">🏷 Desconto</option>
+          <option value="rawg_estimated_playtime">⏱ Playtime</option>
+          <option value="viewer_max">👁 Viewer Max</option>
+          <option value="streams_ao_vivo">🎮 Streams ao Vivo</option>
+          <option value="top_streamer_viewers">🌟 Top Streamer Views</option>
+          <option value="appid">🆔 App ID</option>
+          <option value="rawg_id">🔢 RAWG ID</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Eixo Y</label>
+        <select id="axis-y">
+          <option value="rating" selected>⭐ Rating</option>
+          <option value="metacritic">🎯 Metacritic</option>
+          <option value="owners_medio">👥 Owners</option>
+          <option value="ccu_peak">🔥 CCU Peak</option>
+          <option value="total_viewers">📺 Total Viewers</option>
+          <option value="price">💰 Preço</option>
+          <option value="discount">🏷 Desconto</option>
+          <option value="rawg_estimated_playtime">⏱ Playtime</option>
+          <option value="viewer_max">👁 Viewer Max</option>
+          <option value="streams_ao_vivo">🎮 Streams ao Vivo</option>
+          <option value="top_streamer_viewers">🌟 Top Streamer Views</option>
+          <option value="appid">🆔 App ID</option>
+          <option value="rawg_id">🔢 RAWG ID</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Amostras</label>
+        <select id="scatter-limit">
+          <option value="100">100</option>
+          <option value="200" selected>200</option>
+          <option value="500">500</option>
+          <option value="1000">Todos</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Rating mín</label>
+        <input type="number" id="scatter-rmin" placeholder="ex: 3.0" min="0" max="5" step="0.1" style="width:110px"/>
+      </div>
+      <button class="btn btn-primary" onclick="loadScatter()">▶ GERAR</button>
+    </div>
+    <div class="chart-container"><canvas id="scatter-chart"></canvas></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div class="section-title" style="font-size:.75rem;margin-bottom:0">📈 Histograma 1</div>
+        <div class="field" style="min-width:0">
+          <select id="hist1-var" onchange="updateHist1()" style="min-width:170px;font-size:.75rem">
+            <option value="rating">⭐ Rating</option>
+            <option value="metacritic">🎯 Metacritic</option>
+            <option value="price">💰 Preço</option>
+            <option value="rawg_estimated_playtime">⏱ Playtime</option>
+            <option value="discount">🏷 Desconto</option>
+            <option value="ccu_peak">🔥 CCU Peak</option>
+            <option value="owners_medio">👥 Owners</option>
+            <option value="total_viewers">📺 Total Viewers</option>
+            <option value="streams_ao_vivo">🎮 Streams</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-container" style="height:260px"><canvas id="hist-chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div class="section-title" style="font-size:.75rem;margin-bottom:0">📊 Histograma 2</div>
+        <div class="field" style="min-width:0">
+          <select id="hist2-var" onchange="updateHist2()" style="min-width:170px;font-size:.75rem">
+            <option value="metacritic" selected>🎯 Metacritic</option>
+            <option value="rating">⭐ Rating</option>
+            <option value="price">💰 Preço</option>
+            <option value="rawg_estimated_playtime">⏱ Playtime</option>
+            <option value="discount">🏷 Desconto</option>
+            <option value="ccu_peak">🔥 CCU Peak</option>
+            <option value="owners_medio">👥 Owners</option>
+            <option value="total_viewers">📺 Total Viewers</option>
+            <option value="streams_ao_vivo">🎮 Streams</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-container" style="height:260px"><canvas id="meta-chart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- CRUD -->
+<section id="sec-crud" class="section">
+  <div class="section-title">⚙️ Gestão de Dados (CRUD)</div>
+  <div class="crud-tabs">
+    <button class="crud-tab active" onclick="setCrudTab('read')">🔍 Consultar</button>
+    <button class="crud-tab" onclick="setCrudTab('create')">➕ Inserir</button>
+    <button class="crud-tab" onclick="setCrudTab('update')">✏️ Atualizar</button>
+    <button class="crud-tab" onclick="setCrudTab('delete')">🗑️ Eliminar</button>
+  </div>
+
+  <div id="crud-read" class="card">
+    <div class="controls-row">
+      <div class="field"><label>Tabela</label>
+        <select id="crud-read-table">
+          <option value="metricas">fact_game_metrics</option>
+          <option value="jogos">dim_games</option>
+          <option value="publishers">dim_publishers</option>
+          <option value="developers">dim_developers</option>
+        </select>
+      </div>
+      <div class="field"><label>ID (opcional)</label><input type="number" id="crud-read-id" placeholder="vazio = todos" style="width:140px"/></div>
+      <div class="field"><label>Limite</label>
+        <select id="crud-read-limit">
+          <option value="10">10</option><option value="25" selected>25</option>
+          <option value="50">50</option><option value="100">100</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="crudRead()">▶ EXECUTAR</button>
+    </div>
+    <div class="table-wrap" style="max-height:400px;overflow-y:auto">
+      <table><thead id="crud-read-head"></thead><tbody id="crud-read-body"></tbody></table>
+    </div>
+  </div>
+
+  <div id="crud-create" class="card" style="display:none">
+    <div style="margin-bottom:1rem">
+      <div class="field" style="max-width:220px"><label>Tabela</label>
+        <select id="crud-create-table" onchange="renderCreateForm()">
+          <option value="metricas">fact_game_metrics</option>
+          <option value="jogos">dim_games</option>
+          <option value="publishers">dim_publishers</option>
+          <option value="developers">dim_developers</option>
+        </select>
+      </div>
+    </div>
+    <div id="create-form" class="crud-form"></div>
+    <div style="margin-top:1rem"><button class="btn btn-success" onclick="crudCreate()">➕ INSERIR</button></div>
+    <div id="create-result" class="crud-result" style="display:none"></div>
+  </div>
+
+  <div id="crud-update" class="card" style="display:none">
+    <div class="controls-row">
+      <div class="field"><label>Tabela</label>
+        <select id="crud-update-table" style="min-width:220px" onchange="renderUpdateForm()">
+          <option value="metricas">fact_game_metrics (rawg_id)</option>
+          <option value="jogos">dim_games (rawg_id)</option>
+          <option value="publishers">dim_publishers (publisher_id)</option>
+          <option value="developers">dim_developers (developer_id)</option>
+        </select>
+      </div>
+      <div class="field"><label>ID</label><input type="number" id="crud-update-id" placeholder="ID" style="width:120px"/></div>
+    </div>
+    <div id="update-form" class="crud-form"></div>
+    <div style="margin-top:1rem"><button class="btn btn-primary" onclick="crudUpdate()">✏️ ATUALIZAR</button></div>
+    <div id="update-result" class="crud-result" style="display:none"></div>
+  </div>
+
+  <div id="crud-delete" class="card" style="display:none">
+    <div class="controls-row">
+      <div class="field"><label>Tabela</label>
+        <select id="crud-delete-table" style="min-width:220px">
+          <option value="metricas">fact_game_metrics (rawg_id)</option>
+          <option value="jogos">dim_games (rawg_id)</option>
+          <option value="publishers">dim_publishers (publisher_id)</option>
+          <option value="developers">dim_developers (developer_id)</option>
+        </select>
+      </div>
+      <div class="field"><label>ID</label><input type="number" id="crud-delete-id" placeholder="ID" style="width:120px"/></div>
+      <button class="btn btn-danger" onclick="crudDelete()">🗑️ ELIMINAR</button>
+    </div>
+    <div id="delete-result" class="crud-result" style="display:none"></div>
+  </div>
+</section>
+
+<!-- QUERIES -->
+<section id="sec-query" class="section">
+  <div class="section-title">🔍 Query Builder</div>
+  <div class="two-col">
+    <div class="card" style="display:flex;flex-direction:column;gap:1rem;">
+      <div class="controls-row">
+        <div class="field"><label>Tabela</label>
+          <select id="qb-table" onchange="updateSqlPreview()">
+            <option value="metricas">fact_game_metrics</option>
+            <option value="jogos">dim_games</option>
+            <option value="publishers">dim_publishers</option>
+            <option value="developers">dim_developers</option>
+            <option value="analise/top-metacritic">top metacritic (join)</option>
+            <option value="analise/top-rating">top rating (join)</option>
+            <option value="analise/top-owners">top owners (join)</option>
+            <option value="analise/top-ccu">top CCU (join)</option>
+            <option value="analise/top-viewers">top viewers (join)</option>
+            <option value="analise/top-price">top preço (join)</option>
+            <option value="analise/stats">estatísticas gerais</option>
+          </select>
+        </div>
+        <div class="field"><label>Ordenar por</label>
+          <select id="qb-order" onchange="updateSqlPreview()">
+            <option value="">— nenhum —</option>
+            <option value="rating">rating</option>
+            <option value="metacritic">metacritic</option>
+            <option value="price">price</option>
+            <option value="owners_medio">owners_medio</option>
+            <option value="ccu_peak">ccu_peak</option>
+            <option value="total_viewers">total_viewers</option>
+            <option value="streams_ao_vivo">streams_ao_vivo</option>
+            <option value="rawg_estimated_playtime">playtime</option>
+            <option value="discount">discount</option>
+            <option value="appid">appid</option>
+            <option value="rawg_id">rawg_id</option>
+          </select>
+        </div>
+        <div class="field"><label>Direção</label>
+          <select id="qb-dir" onchange="updateSqlPreview()">
+            <option value="desc">DESC</option><option value="asc">ASC</option>
+          </select>
+        </div>
+      </div>
+      <div class="controls-row">
+        <div class="field"><label>Rating mín</label><input type="number" id="qb-rmin" placeholder="0-5" step="0.1" style="width:100px" oninput="updateSqlPreview()"/></div>
+        <div class="field"><label>Rating máx</label><input type="number" id="qb-rmax" placeholder="0-5" step="0.1" style="width:100px" oninput="updateSqlPreview()"/></div>
+        <div class="field"><label>Metacritic mín</label><input type="number" id="qb-mmin" placeholder="0-100" style="width:110px" oninput="updateSqlPreview()"/></div>
+        <div class="field"><label>Metacritic máx</label><input type="number" id="qb-mmax" placeholder="0-100" style="width:110px" oninput="updateSqlPreview()"/></div>
+        <div class="field"><label>Preço máx</label><input type="number" id="qb-pmax" placeholder="ex: 30" step="0.01" style="width:100px" oninput="updateSqlPreview()"/></div>
+        <div class="field"><label>Owners mín</label><input type="number" id="qb-omin" placeholder="ex: 100000" style="width:130px" oninput="updateSqlPreview()"/></div>
+        <div class="field"><label>Limite</label>
+          <select id="qb-limit" onchange="updateSqlPreview()">
+            <option value="10">10</option><option value="25" selected>25</option>
+            <option value="50">50</option><option value="100">100</option><option value="500">500</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div class="field" style="margin-bottom:.5rem"><label>Endpoint gerado</label></div>
+        <div class="sql-preview" id="sql-preview">GET /metricas?limit=25</div>
+      </div>
+      <div><button class="btn btn-primary" onclick="runQuery()">▶ EXECUTAR</button></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:1rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-family:var(--font-mono);font-size:.75rem;color:var(--muted)" id="qb-count">— resultados</span>
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ CSV</button>
+      </div>
+      <div class="table-wrap" style="max-height:500px;overflow-y:auto">
+        <table><thead id="qb-head"></thead>
+        <tbody id="qb-body"><tr><td colspan="10" class="empty">Configura e executa →</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+<div id="toast"></div>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+let scatterChart=null, histChart=null, metaChart=null, lastQueryData=[];
+
+// ── Utils ──────────────────────────────────────────────────────────────────
+function toast(msg, err=false) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show'+(err?' err':'');
+  setTimeout(()=>t.className='',3000);
+}
+async function api(path) {
+  const r=await fetch(API+path);
+  if(!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+async function apiPost(path,body){const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.detail||JSON.stringify(d));return d;}
+async function apiPatch(path,body){const r=await fetch(API+path,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.detail||JSON.stringify(d));return d;}
+async function apiDelete(path){const r=await fetch(API+path,{method:'DELETE'});const d=await r.json();if(!r.ok)throw new Error(d.detail||JSON.stringify(d));return d;}
+function fmt(v){if(v==null)return'—';if(typeof v==='number'&&v>10000)return v.toLocaleString('pt');if(typeof v==='number')return v;return v;}
+
+// ── Nav ────────────────────────────────────────────────────────────────────
+function showSection(name){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  document.querySelector(`[data-sec="${name}"]`).classList.add('active');
+  if(name==='scatter'&&!scatterChart) loadScatter();
+}
+
+// ── Status ─────────────────────────────────────────────────────────────────
+async function checkStatus(){
+  try{
+    await api('/ping');
+    document.getElementById('api-status').textContent='API ONLINE';
+    loadStats(); loadTop();
+  }catch{
+    document.getElementById('api-status').textContent='API OFFLINE';
+    document.getElementById('dot').style.background='var(--neon2)';
+  }
+}
+async function loadStats(){
+  try{
+    const d=await api('/analise/stats');
+    document.getElementById('s-total').textContent=d.total_jogos??'—';
+    document.getElementById('s-rating').textContent=d.rating_medio??'—';
+    document.getElementById('s-meta').textContent=d.metacritic_medio??'—';
+    document.getElementById('s-preco').textContent=d.preco_medio!=null?'€'+d.preco_medio:'—';
+    document.getElementById('s-pub').textContent=d.total_publishers??'—';
+    document.getElementById('s-dev').textContent=d.total_developers??'—';
+    document.getElementById('s-owners').textContent=d.max_owners!=null?(d.max_owners/1e6).toFixed(1)+'M':'—';
+    document.getElementById('s-ccu').textContent=d.max_ccu!=null?d.max_ccu.toLocaleString('pt'):'—';
+  }catch{}
+}
+
+// ── TOP ────────────────────────────────────────────────────────────────────
+async function loadTop(){
+  const cat=document.getElementById('top-category').value;
+  const lim=document.getElementById('top-limit').value;
+  const tbody=document.getElementById('top-tbody');
+  tbody.innerHTML='<tr class="loading-row"><td colspan="10"><div class="loader"></div></td></tr>';
+  const endpointMap={metacritic:'analise/top-metacritic',rating:'analise/top-rating',owners:'analise/top-owners',ccu:'analise/top-ccu',viewers:'analise/top-viewers',price:'analise/top-price'};
+  try{
+    const ep=endpointMap[cat]||'analise/top-metacritic';
+    let r;
+    if(cat==='rawg_id'){r=await api(`/${ep}?limit=${lim}&order_by=rawg_id&order_dir=desc`);}
+    else{r=await api(`/${ep}?limit=${lim}`);}
+    const data=r.data;
+    if(!data.length){tbody.innerHTML='<tr><td colspan="10" class="empty">Sem resultados</td></tr>';return;}
+    tbody.innerHTML=data.map((row,i)=>{
+      const rating=row.rating!=null?`<div class="bar-wrap"><div class="bar-out"><div class="bar-in" style="width:${(row.rating/5)*100}%"></div></div><span>${row.rating}</span></div>`:'—';
+      const meta=row.metacritic!=null?`<span class="badge ${row.metacritic>=85?'bg':row.metacritic>=70?'bb':'br'}">${row.metacritic}</span>`:'—';
+      const preco=row.price!=null&&row.price>0?`€${row.price}`:(row.price===0?'Free':'—');
+      const owners=row.owners_medio!=null?(row.owners_medio>=1e6?(row.owners_medio/1e6).toFixed(1)+'M':row.owners_medio.toLocaleString('pt')):'—';
+      const ccu=row.ccu_peak!=null?row.ccu_peak.toLocaleString('pt'):'—';
+      const viewers=row.total_viewers!=null?Math.round(row.total_viewers).toLocaleString('pt'):'—';
+      return`<tr><td class="rank-cell">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td><td>${row.jogo??row.rawg_id??'—'}</td><td style="color:var(--muted)">${row.publisher??'—'}</td><td style="color:var(--muted)">${row.developer??'—'}</td><td>${rating}</td><td>${meta}</td><td>${preco}</td><td>${owners}</td><td>${ccu}</td><td>${viewers}</td></tr>`;
+    }).join('');
+  }catch(e){tbody.innerHTML=`<tr><td colspan="10" class="empty" style="color:var(--neon2)">Erro: ${e.message}</td></tr>`;toast(e.message,true);}
+}
+
+// ── SCATTER ────────────────────────────────────────────────────────────────
+async function loadScatter(){
+  const xAxis=document.getElementById('axis-x').value;
+  const yAxis=document.getElementById('axis-y').value;
+  const lim=document.getElementById('scatter-limit').value;
+  const rmin=document.getElementById('scatter-rmin').value;
+  let url=`/metricas?limit=${lim}`;
+  if(rmin) url+=`&rating_min=${rmin}`;
+  try{
+    const res=await api(url);
+    const raw=res.data;
+    const pts=raw.filter(d=>d[xAxis]!=null&&d[yAxis]!=null).map(d=>({x:+d[xAxis],y:+d[yAxis]}));
+    if(scatterChart)scatterChart.destroy();
+    scatterChart=new Chart(document.getElementById('scatter-chart').getContext('2d'),{
+      type:'scatter',
+      data:{datasets:[{label:`${xAxis} vs ${yAxis}`,data:pts,backgroundColor:'rgba(0,245,255,0.45)',pointRadius:4,pointHoverRadius:7,pointHoverBackgroundColor:'var(--neon2)'}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#c8d8f0',font:{family:'Share Tech Mono',size:11}}},
+          tooltip:{backgroundColor:'#0a1628',borderColor:'#1a2d52',borderWidth:1,titleColor:'#00f5ff',bodyColor:'#c8d8f0',
+            callbacks:{label:ctx=>`${xAxis}: ${ctx.parsed.x} | ${yAxis}: ${ctx.parsed.y}`}}},
+        scales:{
+          x:{title:{display:true,text:xAxis,color:'#00f5ff',font:{family:'Orbitron',size:10}},ticks:{color:'#4a6080'},grid:{color:'rgba(26,45,82,0.5)'}},
+          y:{title:{display:true,text:yAxis,color:'#00f5ff',font:{family:'Orbitron',size:10}},ticks:{color:'#4a6080'},grid:{color:'rgba(26,45,82,0.5)'}}
+        }}
+    });
+    lastScatterData = raw;
+    buildHist('hist-chart', raw, document.getElementById('hist1-var').value, 'rgba(0,245,255,0.4)', 'var(--neon)', true);
+    buildHist('meta-chart', raw, document.getElementById('hist2-var').value, 'rgba(255,45,120,0.4)', 'var(--neon2)', false);
+    toast(`✓ ${pts.length} pontos`);
+  }catch(e){toast('Erro scatter: '+e.message,true);}
+}
+
+// ── CRUD ───────────────────────────────────────────────────────────────────
+const FORMS={
+  metricas:[{id:'rawg_id',label:'RAWG ID',type:'number',req:true},{id:'publisher_id',label:'Publisher ID',type:'number',req:true},{id:'developer_id',label:'Developer ID',type:'number',req:true},{id:'appid',label:'App ID',type:'number'},{id:'rating',label:'Rating',type:'number',step:'0.01'},{id:'metacritic',label:'Metacritic',type:'number'},{id:'rawg_estimated_playtime',label:'Playtime (h)',type:'number'},{id:'price',label:'Preço (€)',type:'number',step:'0.01'},{id:'discount',label:'Desconto (%)',type:'number'},{id:'owners_medio',label:'Owners Médio',type:'number'},{id:'ccu_peak',label:'CCU Peak',type:'number'},{id:'streams_ao_vivo',label:'Streams ao Vivo',type:'number'},{id:'total_viewers',label:'Total Viewers',type:'number'},{id:'viewer_max',label:'Viewer Max',type:'number'},{id:'top_streamer_viewers',label:'Top Streamer Views',type:'number'}],
+  jogos:[{id:'name',label:'Nome',type:'text'},{id:'slug',label:'Slug',type:'text'},{id:'released',label:'Data Lançamento',type:'text',placeholder:'YYYY-MM-DD'}],
+  publishers:[{id:'publisher_name',label:'Nome Publisher',type:'text',req:true}],
+  developers:[{id:'developer_name',label:'Nome Developer',type:'text',req:true}],
+};
+const UPDATE_FORMS={
+  metricas:FORMS.metricas.filter(f=>f.id!=='rawg_id'),
+  jogos:FORMS.jogos,
+  publishers:FORMS.publishers,
+  developers:FORMS.developers,
+};
+
+function setCrudTab(tab){
+  ['read','create','update','delete'].forEach(t=>{document.getElementById('crud-'+t).style.display=t===tab?'block':'none';});
+  document.querySelectorAll('.crud-tab').forEach((b,i)=>{b.classList.toggle('active',['read','create','update','delete'][i]===tab);});
+  if(tab==='create')renderCreateForm();
+  if(tab==='update')renderUpdateForm();
+}
+function renderForm(containerId,fields){
+  document.getElementById(containerId).innerHTML=fields.map(f=>`<div class="field"><label>${f.label}${f.req?'<span style="color:var(--neon2)"> *</span>':''}</label><input type="${f.type}" id="cf-${f.id}" placeholder="${f.placeholder||f.label}" ${f.step?`step="${f.step}"`:''}"/></div>`).join('');
+}
+function renderCreateForm(){renderForm('create-form',FORMS[document.getElementById('crud-create-table').value]);}
+function renderUpdateForm(){renderForm('update-form',UPDATE_FORMS[document.getElementById('crud-update-table').value.split(' ')[0]]);}
+function getFormData(fields){
+  const obj={};
+  fields.forEach(f=>{const el=document.getElementById('cf-'+f.id);if(!el)return;const v=el.value.trim();if(v==='')return;obj[f.id]=f.type==='number'?Number(v):v;});
+  return obj;
+}
+function showResult(id,data,ok=true){const el=document.getElementById(id);el.style.display='block';el.className='crud-result '+(ok?'ok':'err');el.textContent=JSON.stringify(data,null,2);}
+
+async function crudRead(){
+  const tbl=document.getElementById('crud-read-table').value;
+  const id=document.getElementById('crud-read-id').value;
+  const lim=document.getElementById('crud-read-limit').value;
+  const head=document.getElementById('crud-read-head');
+  const body=document.getElementById('crud-read-body');
+  body.innerHTML='<tr class="loading-row"><td colspan="15"><div class="loader"></div></td></tr>';
+  try{
+    let data;
+    if(id){const r=await api(`/${tbl}/${id}`);data=[r];}
+    else{const r=await api(`/${tbl}?limit=${lim}`);data=r.data??[r];}
+    if(!data.length){body.innerHTML='<tr><td colspan="15" class="empty">Sem resultados</td></tr>';return;}
+    const cols=Object.keys(data[0]);
+    head.innerHTML='<tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr>';
+    body.innerHTML=data.map(row=>'<tr>'+cols.map(c=>`<td>${fmt(row[c])}</td>`).join('')+'</tr>').join('');
+    toast(`✓ ${data.length} registos`);
+  }catch(e){body.innerHTML=`<tr><td colspan="15" class="empty" style="color:var(--neon2)">${e.message}</td></tr>`;toast(e.message,true);}
+}
+async function crudCreate(){
+  const tbl=document.getElementById('crud-create-table').value;
+  const body=getFormData(FORMS[tbl]);
+  try{const r=await apiPost(`/${tbl}`,body);showResult('create-result',r,true);toast('✓ Inserido!');}
+  catch(e){showResult('create-result',{erro:e.message},false);toast(e.message,true);}
+}
+async function crudUpdate(){
+  const tblRaw=document.getElementById('crud-update-table').value;
+  const tbl=tblRaw.split(' ')[0];
+  const id=document.getElementById('crud-update-id').value;
+  if(!id){toast('Introduz um ID',true);return;}
+  const body=getFormData(UPDATE_FORMS[tbl]||FORMS[tbl]);
+  try{const r=await apiPatch(`/${tbl}/${id}`,body);showResult('update-result',r,true);toast('✓ Atualizado!');}
+  catch(e){showResult('update-result',{erro:e.message},false);toast(e.message,true);}
+}
+async function crudDelete(){
+  const tblRaw=document.getElementById('crud-delete-table').value;
+  const tbl=tblRaw.split(' ')[0];
+  const id=document.getElementById('crud-delete-id').value;
+  if(!id){toast('Introduz um ID',true);return;}
+  if(!confirm(`Eliminar ID ${id} de ${tbl}?`))return;
+  try{const r=await apiDelete(`/${tbl}/${id}`);showResult('delete-result',r,true);toast('✓ Eliminado!');}
+  catch(e){showResult('delete-result',{erro:e.message},false);toast(e.message,true);}
+}
+
+// ── QUERY BUILDER ──────────────────────────────────────────────────────────
+function updateSqlPreview(){
+  const tbl=document.getElementById('qb-table').value;
+  const order=document.getElementById('qb-order').value;
+  const dir=document.getElementById('qb-dir').value;
+  const lim=document.getElementById('qb-limit').value;
+  const rmin=document.getElementById('qb-rmin').value;
+  const rmax=document.getElementById('qb-rmax').value;
+  const mmin=document.getElementById('qb-mmin').value;
+  const mmax=document.getElementById('qb-mmax').value;
+  const pmax=document.getElementById('qb-pmax').value;
+  const omin=document.getElementById('qb-omin').value;
+  let url;
+  if(tbl.startsWith('analise')){
+    url=`/${tbl}?limit=${lim}`;
+  }else{
+    const p=[`limit=${lim}`];
+    if(order)p.push(`order_by=${order}`,`order_dir=${dir}`);
+    if(rmin)p.push(`rating_min=${rmin}`);
+    if(rmax)p.push(`rating_max=${rmax}`);
+    if(mmin)p.push(`metacritic_min=${mmin}`);
+    if(mmax)p.push(`metacritic_max=${mmax}`);
+    if(pmax)p.push(`price_max=${pmax}`);
+    if(omin)p.push(`owners_min=${omin}`);
+    url=`/${tbl}?${p.join('&')}`;
+  }
+  document.getElementById('sql-preview').textContent='GET '+url;
+  return url;
+}
+async function runQuery(){
+  const url=updateSqlPreview();
+  const head=document.getElementById('qb-head');
+  const body=document.getElementById('qb-body');
+  body.innerHTML='<tr class="loading-row"><td colspan="15"><div class="loader"></div></td></tr>';
+  try{
+    const res=await api(url.replace('GET ',''));
+    let data=res.data??(Array.isArray(res)?res:[res]);
+    if(!data.length){body.innerHTML='<tr><td colspan="15" class="empty">Sem resultados</td></tr>';document.getElementById('qb-count').textContent='0 resultados';return;}
+    lastQueryData=data;
+    const cols=Object.keys(data[0]);
+    head.innerHTML='<tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr>';
+    body.innerHTML=data.map(row=>'<tr>'+cols.map(c=>`<td>${fmt(row[c])}</td>`).join('')+'</tr>').join('');
+    document.getElementById('qb-count').textContent=`${data.length} resultado${data.length!==1?'s':''}`;
+    toast(`✓ ${data.length} resultados`);
+  }catch(e){body.innerHTML=`<tr><td colspan="15" class="empty" style="color:var(--neon2)">${e.message}</td></tr>`;toast(e.message,true);}
+}
+function exportCSV(){
+  if(!lastQueryData.length){toast('Sem dados',true);return;}
+  const cols=Object.keys(lastQueryData[0]);
+  const rows=[cols.join(','),...lastQueryData.map(r=>cols.map(c=>JSON.stringify(r[c]??'')).join(','))];
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'}));a.download='export.csv';a.click();
+  toast('✓ CSV exportado!');
+}
+
+// ── Histograms ─────────────────────────────────────────────────────────────
+let lastScatterData = [];
+
+function buildHist(canvasId, data, variable, bgColor, borderColor, isFirst) {
+  const vals = data.filter(d=>d[variable]!=null).map(d=>+d[variable]);
+  if(!vals.length) return;
+  const min=Math.min(...vals), max=Math.max(...vals);
+  const N=10;
+  const step=(max-min)/N||1;
+  const bins=Array(N).fill(0);
+  const labels=[];
+  for(let i=0;i<N;i++){
+    const lo=min+i*step, hi=min+(i+1)*step;
+    labels.push(lo>=1000?(lo/1000).toFixed(0)+'k':(Number.isInteger(lo)?lo:lo.toFixed(1)));
+    vals.forEach(v=>{if(v>=lo&&(v<hi||(i===N-1&&v<=hi)))bins[i]++;});
+  }
+  const chartRef = isFirst ? histChart : metaChart;
+  if(chartRef) chartRef.destroy();
+  const newChart = new Chart(document.getElementById(canvasId).getContext('2d'),{type:'bar',
+    data:{labels,datasets:[{data:bins,backgroundColor:bgColor,borderColor,borderWidth:1,label:variable}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:'#c8d8f0',font:{family:'Share Tech Mono',size:10}}}},
+      scales:{x:{ticks:{color:'#4a6080',font:{size:9},maxRotation:45},grid:{color:'rgba(26,45,82,0.4)'}},y:{ticks:{color:'#4a6080'},grid:{color:'rgba(26,45,82,0.4)'}}}}
+  });
+  if(isFirst) histChart=newChart; else metaChart=newChart;
+}
+
+function updateHist1(){if(lastScatterData.length) buildHist('hist-chart',lastScatterData,document.getElementById('hist1-var').value,'rgba(0,245,255,0.4)','var(--neon)',true);}
+function updateHist2(){if(lastScatterData.length) buildHist('meta-chart',lastScatterData,document.getElementById('hist2-var').value,'rgba(255,45,120,0.4)','var(--neon2)',false);}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+renderCreateForm(); renderUpdateForm(); updateSqlPreview(); checkStatus();
+</script>
+</body>
+</html>
