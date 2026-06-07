@@ -9,19 +9,10 @@ import threading
 import time
 from typing import Optional
 from pydantic import BaseModel
-from dotenv import load_dotenv
 
-# ─── Configuração Dinâmica (.env + Fallback) ──────────────────────────────────
+# ─── Configuração ─────────────────────────────────────────────────────────────
 
-# Força o Python a procurar o .env na raiz (uma pasta acima de 'src')
-dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
-load_dotenv(dotenv_path)
-
-# Tenta ler do .env. Se não existir, usa a string direta como segurança.
-DATABASE_URL = os.getenv(
-    "NEON_DB_URL", 
-    "postgresql://neondb_owner:npg_o1eRVk2MsJgH@ep-empty-heart-alqacqb3-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require"
-)
+DATABASE_URL = "postgresql://neondb_owner:npg_o1eRVk2MsJgH@ep-empty-heart-alqacqb3-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require"
 
 # ─── Keep-alive ───────────────────────────────────────────────────────────────
 
@@ -114,15 +105,14 @@ class DimDeveloperCreate(BaseModel):
     developer_name: str
 
 # ═════════════════════════════════════════════════════════════════════════════
-# ROTAS DE INTERFACE / ESTADO
+# ESTADO
 # ═════════════════════════════════════════════════════════════════════════════
 
 @app.get("/frontend", include_in_schema=False)
 def serve_frontend():
-    # CORREÇÃO: Procura o index.html uma pasta acima da pasta 'src' (na raiz do projeto)
-    html_path = os.path.join(os.path.dirname(__file__), "..", "index.html")
+    html_path = os.path.join(os.path.dirname(__file__), "index.html")
     if not os.path.exists(html_path):
-        raise HTTPException(status_code=404, detail="index.html não encontrado na raiz do projeto")
+        raise HTTPException(status_code=404, detail="index.html não encontrado")
     return FileResponse(html_path, media_type="text/html")
 
 @app.get("/", tags=["Estado"])
@@ -366,7 +356,7 @@ def top_owners(limit: int = Query(10, ge=1, le=1000)):
 @app.get("/analise/top-viewers", tags=["Análise"])
 def top_viewers(limit: int = Query(10, ge=1, le=1000)):
     with get_conn() as conn:
-        rows = conn.execute(JOIN_SELECT + " WHERE f.total_viewers IS NOT NULL ORDER BY f.total_viewers DESC NULLS LAST LIMIT %s", (limit,)).fetchall()
+        rows = conn.execute(JOIN_SELECT + " WHERE f.total_viewers IS NOT NULL AND f.total_viewers > 0 ORDER BY f.total_viewers DESC NULLS LAST LIMIT %s", (limit,)).fetchall()
     return {"data": rows}
 
 @app.get("/analise/top-ccu", tags=["Análise"])
@@ -413,19 +403,19 @@ def top_playtime(limit: int = Query(10, ge=1, le=1000)):
 @app.get("/analise/top-viewer-max", tags=["Análise"])
 def top_viewer_max(limit: int = Query(10, ge=1, le=1000)):
     with get_conn() as conn:
-        rows = conn.execute(JOIN_SELECT + " WHERE f.viewer_max IS NOT NULL ORDER BY f.viewer_max DESC NULLS LAST LIMIT %s", (limit,)).fetchall()
+        rows = conn.execute(JOIN_SELECT + " WHERE f.viewer_max IS NOT NULL AND f.viewer_max > 0 ORDER BY f.viewer_max DESC NULLS LAST LIMIT %s", (limit,)).fetchall()
     return {"data": rows}
 
 @app.get("/analise/top-streams", tags=["Análise"])
 def top_streams(limit: int = Query(10, ge=1, le=1000)):
     with get_conn() as conn:
-        rows = conn.execute(JOIN_SELECT + " WHERE f.streams_ao_vivo IS NOT NULL ORDER BY f.streams_ao_vivo DESC NULLS LAST LIMIT %s", (limit,)).fetchall()
+        rows = conn.execute(JOIN_SELECT + " WHERE f.streams_ao_vivo IS NOT NULL AND f.streams_ao_vivo > 0 ORDER BY f.streams_ao_vivo DESC NULLS LAST LIMIT %s", (limit,)).fetchall()
     return {"data": rows}
 
 @app.get("/analise/top-streamer", tags=["Análise"])
 def top_streamer(limit: int = Query(10, ge=1, le=1000)):
     with get_conn() as conn:
-        rows = conn.execute(JOIN_SELECT + " WHERE f.top_streamer_viewers IS NOT NULL ORDER BY f.top_streamer_viewers DESC NULLS LAST LIMIT %s", (limit,)).fetchall()
+        rows = conn.execute(JOIN_SELECT + " WHERE f.top_streamer_viewers IS NOT NULL AND f.top_streamer_viewers > 0 ORDER BY f.top_streamer_viewers DESC NULLS LAST LIMIT %s", (limit,)).fetchall()
     return {"data": rows}
 
 @app.get("/analise/top-appid", tags=["Análise"])

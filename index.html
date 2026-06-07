@@ -450,7 +450,7 @@ async function api(path) {
 async function apiPost(path,body){const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.detail||JSON.stringify(d));return d;}
 async function apiPatch(path,body){const r=await fetch(API+path,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.detail||JSON.stringify(d));return d;}
 async function apiDelete(path){const r=await fetch(API+path,{method:'DELETE'});const d=await r.json();if(!r.ok)throw new Error(d.detail||JSON.stringify(d));return d;}
-function fmt(v){if(v==null)return'—';if(typeof v==='number'&&v>10000)return v.toLocaleString('pt');if(typeof v==='number')return v;return v;}
+function fmt(v){if(v==null||v===undefined)return'—';if(typeof v==='number'&&v>10000)return v.toLocaleString('pt');if(typeof v==='number')return v;if(v==='')return'—';return v;}
 
 // ── Nav ────────────────────────────────────────────────────────────────────
 function showSection(name){
@@ -492,7 +492,21 @@ async function loadTop(){
   const lim=document.getElementById('top-limit').value;
   const tbody=document.getElementById('top-tbody');
   tbody.innerHTML='<tr class="loading-row"><td colspan="10"><div class="loader"></div></td></tr>';
-  const endpointMap={metacritic:'analise/top-metacritic',rating:'analise/top-rating',owners:'analise/top-owners',ccu:'analise/top-ccu',viewers:'analise/top-viewers',price:'analise/top-price'};
+  const endpointMap={
+      metacritic:'analise/top-metacritic',
+      rating:'analise/top-rating',
+      owners_medio:'analise/top-owners',
+      ccu_peak:'analise/top-ccu',
+      total_viewers:'analise/top-viewers',
+      price:'analise/top-price',
+      discount:'analise/top-discount',
+      rawg_estimated_playtime:'analise/top-playtime',
+      viewer_max:'analise/top-viewer-max',
+      streams_ao_vivo:'analise/top-streams',
+      top_streamer_viewers:'analise/top-streamer',
+      appid:'analise/top-appid',
+      rawg_id:'metricas'
+    };
   try{
     const ep=endpointMap[cat]||'analise/top-metacritic';
     let r;
@@ -507,7 +521,13 @@ async function loadTop(){
       const owners=row.owners_medio!=null?(row.owners_medio>=1e6?(row.owners_medio/1e6).toFixed(1)+'M':row.owners_medio.toLocaleString('pt')):'—';
       const ccu=row.ccu_peak!=null?row.ccu_peak.toLocaleString('pt'):'—';
       const viewers=row.total_viewers!=null?Math.round(row.total_viewers).toLocaleString('pt'):'—';
-      return`<tr><td class="rank-cell">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td><td>${row.jogo??row.rawg_id??'—'}</td><td style="color:var(--muted)">${row.publisher??'—'}</td><td style="color:var(--muted)">${row.developer??'—'}</td><td>${rating}</td><td>${meta}</td><td>${preco}</td><td>${owners}</td><td>${ccu}</td><td>${viewers}</td></tr>`;
+      const desconto=row.discount!=null&&row.discount>0?`${row.discount}%`:'—';
+      const vmax=row.viewer_max!=null?Math.round(Number(row.viewer_max)).toLocaleString('pt'):'—';
+      const streams=row.streams_ao_vivo!=null?Math.round(Number(row.streams_ao_vivo)).toLocaleString('pt'):'—';
+      const topstr=row.top_streamer_viewers!=null?Math.round(Number(row.top_streamer_viewers)).toLocaleString('pt'):'—';
+      const playtime=row.rawg_estimated_playtime!=null?`${row.rawg_estimated_playtime}h`:'—';
+      const appid=row.appid??'—';
+      return`<tr><td class="rank-cell">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td><td>${row.jogo??row.rawg_id??'—'}</td><td style="color:var(--muted)">${row.publisher??'—'}</td><td style="color:var(--muted)">${row.developer??'—'}</td><td>${rating}</td><td>${meta}</td><td>${preco}</td><td>${desconto}</td><td>${owners}</td><td>${ccu}</td><td>${viewers}</td><td>${vmax}</td><td>${streams}</td><td>${topstr}</td><td>${playtime}</td><td>${appid}</td></tr>`;
     }).join('');
   }catch(e){tbody.innerHTML=`<tr><td colspan="10" class="empty" style="color:var(--neon2)">Erro: ${e.message}</td></tr>`;toast(e.message,true);}
 }
